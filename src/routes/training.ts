@@ -1,7 +1,7 @@
 import express, { Response } from "express";
 import { protect } from "../middleware/auth";
 import Training from "../models/Training";
-import { AuthRequest } from "../types";
+import { AuthRequest, ITraining, IUser } from "../types";
 
 const router = express.Router();
 
@@ -55,7 +55,7 @@ router.get(
       }
 
       // Check if training belongs to user
-      if (training.user.toString() !== req.user?._id.toString()) {
+      if (training.user !== req.user?._id) {
         res.status(401).json({ message: "Not authorized" });
         return;
       }
@@ -83,7 +83,7 @@ router.put(
       }
 
       // Check if training belongs to user
-      if (training.user._id.toString() !== req.user?._id.toString()) {
+      if (training.user !== req.user?._id) {
         res.status(401).json({ message: "Not authorized" });
         return;
       }
@@ -115,8 +115,7 @@ router.delete(
         return;
       }
 
-      // Check if training belongs to user
-      if (training.user.toString() !== req.user?._id.toString()) {
+      if (training.user !== req.user?._id) {
         res.status(401).json({ message: "Not authorized" });
         return;
       }
