@@ -1,7 +1,7 @@
 import express, { Response } from "express";
 import { protect } from "../middleware/auth";
 import Training from "../models/Training";
-import { AuthRequest, ITraining, IUser } from "../types";
+import { AuthRequest } from "../types";
 
 const router = express.Router();
 
@@ -10,7 +10,7 @@ const router = express.Router();
 // @access  Private
 router.get("/", protect, async (req: AuthRequest, res: Response) => {
   try {
-    const trainings = await Training.find({ user: req.user?._id });
+    const trainings = await Training.find({ user: req.user?._id }).lean();
     res.json(trainings);
   } catch (error) {
     res.status(500).json({ message: (error as Error).message });
@@ -47,7 +47,7 @@ router.get(
   protect,
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      const training = await Training.findById(req.params.id);
+      const training = await Training.findById(req.params.id).lean();
 
       if (!training) {
         res.status(404).json({ message: "Training not found" });
@@ -55,7 +55,7 @@ router.get(
       }
 
       // Check if training belongs to user
-      if (training.user !== req.user?._id) {
+      if (training.user.toString() !== req.user?._id.toString()) {
         res.status(401).json({ message: "Not authorized" });
         return;
       }
@@ -75,7 +75,7 @@ router.put(
   protect,
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      let training = await Training.findById(req.params.id);
+      let training = await Training.findById(req.params.id).lean();
 
       if (!training) {
         res.status(404).json({ message: "Training not found" });
@@ -83,7 +83,7 @@ router.put(
       }
 
       // Check if training belongs to user
-      if (training.user !== req.user?._id) {
+      if (training.user.toString() !== req.user?._id.toString()) {
         res.status(401).json({ message: "Not authorized" });
         return;
       }
@@ -108,14 +108,14 @@ router.delete(
   protect,
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      const training = await Training.findById(req.params.id);
+      const training = await Training.findById(req.params.id).lean();
 
       if (!training) {
         res.status(404).json({ message: "Training not found" });
         return;
       }
 
-      if (training.user !== req.user?._id) {
+      if (training.user.toString() !== req.user?._id.toString()) {
         res.status(401).json({ message: "Not authorized" });
         return;
       }

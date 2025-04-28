@@ -1,7 +1,8 @@
 import { Request } from "express";
-import { Document } from "mongoose";
+import { Document, ObjectId } from "mongoose";
 
 export interface IUser extends Document {
+  _id: string | ObjectId;
   username: string;
   email: string;
   password: string;
@@ -19,6 +20,7 @@ export interface ITraining extends Document {
   user: IUser["_id"];
   createdAt: Date;
   updatedAt: Date;
+  _id: string | ObjectId;
 }
 
 export interface AuthRequest extends Request {
