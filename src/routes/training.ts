@@ -42,74 +42,92 @@ router.post("/", protect, async (req: AuthRequest, res: Response) => {
 // @route   GET /api/trainings/:id
 // @desc    Get a training by ID
 // @access  Private
-router.get("/:id", protect, async (req: AuthRequest, res: Response) => {
-  try {
-    const training = await Training.findById(req.params.id);
+router.get(
+  "/:id",
+  protect,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const training = await Training.findById(req.params.id);
 
-    if (!training) {
-      return res.status(404).json({ message: "Training not found" });
+      if (!training) {
+        res.status(404).json({ message: "Training not found" });
+        return;
+      }
+
+      // Check if training belongs to user
+      if (training.user.toString() !== req.user?._id.toString()) {
+        res.status(401).json({ message: "Not authorized" });
+        return;
+      }
+
+      res.json(training);
+    } catch (error) {
+      res.status(500).json({ message: (error as Error).message });
     }
-
-    // Check if training belongs to user
-    if (training.user.toString() !== req.user?._id.toString()) {
-      return res.status(401).json({ message: "Not authorized" });
-    }
-
-    res.json(training);
-  } catch (error) {
-    res.status(500).json({ message: (error as Error).message });
   }
-});
+);
 
 // @route   PUT /api/trainings/:id
 // @desc    Update a training
 // @access  Private
-router.put("/:id", protect, async (req: AuthRequest, res: Response) => {
-  try {
-    let training = await Training.findById(req.params.id);
+router.put(
+  "/:id",
+  protect,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      let training = await Training.findById(req.params.id);
 
-    if (!training) {
-      return res.status(404).json({ message: "Training not found" });
+      if (!training) {
+        res.status(404).json({ message: "Training not found" });
+        return;
+      }
+
+      // Check if training belongs to user
+      if (training.user._id.toString() !== req.user?._id.toString()) {
+        res.status(401).json({ message: "Not authorized" });
+        return;
+      }
+
+      training = await Training.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true,
+      });
+
+      res.json(training);
+    } catch (error) {
+      res.status(500).json({ message: (error as Error).message });
     }
-
-    // Check if training belongs to user
-    if (training.user.toString() !== req.user?._id.toString()) {
-      return res.status(401).json({ message: "Not authorized" });
-    }
-
-    training = await Training.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-
-    res.json(training);
-  } catch (error) {
-    res.status(500).json({ message: (error as Error).message });
   }
-});
+);
 
 // @route   DELETE /api/trainings/:id
 // @desc    Delete a training
 // @access  Private
-router.delete("/:id", protect, async (req: AuthRequest, res: Response) => {
-  try {
-    const training = await Training.findById(req.params.id);
+router.delete(
+  "/:id",
+  protect,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const training = await Training.findById(req.params.id);
 
-    if (!training) {
-      return res.status(404).json({ message: "Training not found" });
+      if (!training) {
+        res.status(404).json({ message: "Training not found" });
+        return;
+      }
+
+      // Check if training belongs to user
+      if (training.user.toString() !== req.user?._id.toString()) {
+        res.status(401).json({ message: "Not authorized" });
+        return;
+      }
+
+      await Training.deleteOne({ _id: req.params.id });
+
+      res.json({ message: "Training removed" });
+    } catch (error) {
+      res.status(500).json({ message: (error as Error).message });
     }
-
-    // Check if training belongs to user
-    if (training.user.toString() !== req.user?._id.toString()) {
-      return res.status(401).json({ message: "Not authorized" });
-    }
-
-    await Training.deleteOne({ _id: req.params.id });
-
-    res.json({ message: "Training removed" });
-  } catch (error) {
-    res.status(500).json({ message: (error as Error).message });
   }
-});
+);
 
 export default router;

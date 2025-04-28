@@ -14,7 +14,7 @@ const generateToken = (id: string): string => {
 // @route   POST /api/auth/register
 // @desc    Register user
 // @access  Public
-router.post("/register", async (req: Request, res: Response) => {
+router.post("/register", async (req: Request, res: Response): Promise<void> => {
   try {
     const { username, email, password } = req.body;
 
@@ -22,7 +22,8 @@ router.post("/register", async (req: Request, res: Response) => {
     const userExists = await User.findOne({ email });
 
     if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
+      res.status(400).json({ message: "User already exists" });
+      return;
     }
 
     // Create new user
