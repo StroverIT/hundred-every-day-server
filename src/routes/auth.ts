@@ -16,7 +16,7 @@ const generateToken = (id: string): string => {
 // @access  Public
 router.post("/register", async (req: Request, res: Response): Promise<void> => {
   try {
-    const { username, email, password } = req.body;
+    const { email, password } = req.body;
 
     // Check if user exists
     const userExists = await User.findOne({ email });
@@ -28,7 +28,6 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
 
     // Create new user
     const user = await User.create({
-      username,
       email,
       password,
     });
@@ -36,7 +35,6 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
     if (user) {
       res.status(201).json({
         _id: user._id,
-        username: user.username,
         email: user.email,
         token: generateToken(user._id as string),
       });

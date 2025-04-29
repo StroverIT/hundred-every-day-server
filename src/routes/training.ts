@@ -2,16 +2,34 @@ import express, { Response } from "express";
 import { protect } from "../middleware/auth";
 import Training from "../models/Training";
 import { AuthRequest } from "../types";
+import TrainingType from "../models/TrainingType";
 
 const router = express.Router();
 
-// @route   GET /api/trainings
+// @route   POST /api/trainings
 // @desc    Get all trainings for a user
 // @access  Private
-router.get("/", protect, async (req: AuthRequest, res: Response) => {
+router.post("/", protect, async (req: AuthRequest, res: Response) => {
   try {
-    const trainings = await Training.find({ user: req.user?._id }).lean();
-    res.json(trainings);
+    const { selected } = req.body;
+    const training = await Training.findOne({
+      user: req.user?._id,
+      date: new Date(selected),
+    })
+      .populate("types")
+      .lean();
+
+    if (!training) {
+      const initialTraining = await Training.create({
+        user: req.user?._id,
+        date: new Date(selected),
+      });
+
+      res.json(initialTraining);
+      return;
+    }
+
+    res.json(training);
   } catch (error) {
     res.status(500).json({ message: (error as Error).message });
   }
@@ -20,24 +38,64 @@ router.get("/", protect, async (req: AuthRequest, res: Response) => {
 // @route   POST /api/trainings
 // @desc    Create a new training
 // @access  Private
-router.post("/", protect, async (req: AuthRequest, res: Response) => {
-  try {
-    const { title, description, duration, date, type } = req.body;
+router.post(
+  "/create-type",
+  protect,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { name, type, _id } = req.body;
 
-    const training = await Training.create({
-      title,
-      description,
-      duration,
-      date,
-      type,
-      user: req.user?._id,
-    });
+      const trainingType = await TrainingType.create({
+        name,
+        type,
+      });
 
-    res.status(201).json(training);
-  } catch (error) {
-    res.status(500).json({ message: (error as Error).message });
+      await Training.findByIdAndUpdate(_id, {
+        $push: {
+          types: trainingType._id,
+        },
+      });
+
+      res.status(201).json(trainingType);
+    } catch (error) {
+      res.status(500).json({ message: (error as Error).message });
+    }
   }
-});
+);
+
+router.post(
+  "/update-duration",
+  protect,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { duration, _id } = req.body;
+      const training = await Training.findByIdAndUpdate(_id, {
+        duration,
+      });
+
+      res.json(training);
+    } catch (error) {
+      res.status(500).json({ message: (error as Error).message });
+    }
+  }
+);
+
+router.post(
+  "/update-repetitions",
+  protect,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { repetitions, _id } = req.body;
+      const training = await TrainingType.findByIdAndUpdate(_id, {
+        repetitions,
+      });
+
+      res.json(training);
+    } catch (error) {
+      res.status(500).json({ message: (error as Error).message });
+    }
+  }
+);
 
 // @route   GET /api/trainings/:id
 // @desc    Get a training by ID

@@ -3,28 +3,21 @@ import { ITraining } from "../types";
 
 const TrainingSchema: Schema = new Schema(
   {
-    title: {
-      type: String,
-      required: [true, "Please provide a training title"],
-      trim: true,
-    },
-    description: {
-      type: String,
-      required: [true, "Please provide a description"],
-    },
     duration: {
       type: Number,
-      required: [true, "Please provide duration in minutes"],
+      default: 0,
     },
     date: {
       type: Date,
-      required: [true, "Please provide a date"],
+      default: () => new Date(Date.now()),
     },
-    type: {
-      type: String,
-      enum: ["cardio", "strength", "flexibility", "other"],
-      default: "other",
-    },
+    types: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "TrainingType",
+        default: [],
+      },
+    ],
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
